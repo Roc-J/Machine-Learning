@@ -3,6 +3,7 @@
 
 from numpy import *
 import operator
+from os import listdir
 
 '''kNN算法的通用算法'''
 def createDateSet():
@@ -84,4 +85,40 @@ def classifyPerson():
     print '你对这个人的评价是',resultList[classifierResult-1]
 
 # 下面的内容是手写识别系统
+# 图像转换为测试向量
+def img2vector(filename):
+    returnVect = zeros((1,1024))
+    fileReader = open(filename)
+    for i in range(32):
+        lineStr = fileReader.readline()
+        for j in range(32):
+            returnVect[0,32*i+j] = int(lineStr[j])
+    return returnVect
 
+# 使用k-近邻算法识别手写数字
+
+def handwritingClassTest():
+    hwLabels = []
+    trainingFileList = listdir('trainingDigits')
+    m = len(trainingFileList)
+    trainingMat = zeros((m,1024))
+    for i in range(m):
+        fileNameStr = trainingFileList[i]
+        fileStr = fileNameStr.split('.')[0]
+        classNumberStr = int(fileStr.split('_')[0])
+        hwLabels.append(classNumberStr)
+        trainingMat[i,:] = img2vector('trainingDigits/%s' % fileNameStr)
+    testFileList = listdir('testDigits')
+    errorCount = 0.0
+    mTest = len(testFileList)
+    for i in range(mTest):
+        fileNameStr = testFileList[i]
+        fileStr = fileNameStr.split('.')[0]
+        classNumberStr = int(fileStr.split('_')[0])
+        vecUnderTest = img2vector('testDigits/%s' % fileNameStr)
+        classifierResult = classify(vecUnderTest,trainingMat,hwLabels,3)
+        print 'the classifier came back with %d,the real answer is %d' % (classifierResult,classNumberStr)
+        if(classifierResult!=classNumberStr):
+            errorCount+=1.0
+    print 'the total number of errors is %d' % errorCount
+    print 'the total error rate is : %f' % (errorCount/float(mTest))
